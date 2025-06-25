@@ -313,29 +313,13 @@ def main():
     logging.info(f"   Tweet: {len(tweet_text)} chars")
 
     try:
-        # STEP 1: Upload single image
-        logging.info("=== STEP 1: Uploading single image ===")
+        # STEP 1: Send main tweet (WITHOUT image for now)
+        logging.info("=== STEP 1: Sending main tweet (no image) ===")
         
-        main_image_path = os.path.join("images", "msgtwt.png")
-        
-        # Upload image
-        logging.info("Uploading main tweet image...")
-        main_media_id = safe_media_upload(api_v1, main_image_path)
-        
-        if not main_media_id:
-            logging.error("❌ CRITICAL ERROR: Failed to upload main image.")
-            logging.error("CANCELING entire process - no tweets will be sent without images.")
-            return
-            
-        logging.info("✅ SUCCESS: Image uploaded successfully!")
-        logging.info(f"   - Main image: Media ID {main_media_id}")
-        
-        # STEP 2: Send main tweet with image
-        logging.info("=== STEP 2: Sending main tweet with image ===")
         main_tweet_response = safe_tweet_with_retry(
             client, 
-            tweet_text, 
-            media_ids=[main_media_id]
+            tweet_text
+            # media_ids=[main_media_id]  # DISABLED - no image upload
         )
         
         if not main_tweet_response:
@@ -343,7 +327,7 @@ def main():
             return
             
         main_tweet_id = main_tweet_response.data['id']
-        logging.info(f"✅ Main tweet sent with image! ID: {main_tweet_id}")
+        logging.info(f"✅ Main tweet sent successfully! ID: {main_tweet_id}")
         logging.info("🎉 SUCCESS: Tweet sent successfully!")
         logging.info(f"   🔗 Tweet: https://x.com/user/status/{main_tweet_id}")
 
