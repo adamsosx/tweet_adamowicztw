@@ -288,12 +288,19 @@ Just return the tweet text, no labels."""
 def main():
     logging.info("GitHub Action: Bot execution started.")
 
+    # Check Twitter API keys first
     if not all([api_key, api_secret, access_token, access_token_secret]):
         logging.error("Missing required Twitter API keys. Terminating.")
         return
-        
+    
+    # Check OpenAI client - STOP if not available
     if not openai_client:
-        logging.warning("OpenAI API key not found. Will use template tweets as fallback.")
+        logging.error("❌ CRITICAL: OpenAI API key not found. Bot requires AI to function.")
+        logging.error("Add OPENAI_API_KEY to GitHub Secrets to enable MONTY AI tweets.")
+        logging.info("GitHub Action: Bot execution finished - No OpenAI key found.")
+        return  # EXIT HERE - no tweets without AI
+
+    logging.info("✅ OpenAI client initialized - MONTY AI ready!")
 
     try:
         # Twitter API clients
@@ -319,43 +326,36 @@ def main():
         logging.warning("No token data available. Skipping tweet.")
         return
 
-    # Generate AI tweets or use fallback
-    if openai_client:
-        logging.info("=== GENERATING AI TWEET ===")
-        tweet_text = generate_ai_tweet(top_3)
-    else:
-        logging.info("=== USING TEMPLATE TWEET ===")
-        tweet_text = format_tweet(top_3)
+    # Generate MONTY AI tweet ONLY
+    logging.info("=== GENERATING MONTY AI TWEET ===")
+    tweet_text = generate_ai_tweet(top_3)
     
-    # Validate length BEFORE any uploads
+    # Validate length BEFORE sending
     if len(tweet_text) > 280:
-        logging.error(f"Main tweet too long ({len(tweet_text)} characters). CANCELING.")
+        logging.error(f"MONTY tweet too long ({len(tweet_text)} characters). CANCELING.")
         return
 
-    logging.info(f"📝 Final tweet prepared:")
+    logging.info(f"📝 MONTY tweet prepared:")
     logging.info(f"   Tweet: {len(tweet_text)} chars")
+    logging.info(f"   Content: {tweet_text}")
 
     try:
-        # STEP 1: Send main tweet (WITHOUT image for now)
-        logging.info("=== STEP 1: Sending main tweet (no image) ===")
+        # Send MONTY tweet
+        logging.info("=== SENDING MONTY TWEET ===")
         
-        main_tweet_response = safe_tweet_with_retry(
-            client, 
-            tweet_text
-            # media_ids=[main_media_id]  # DISABLED - no image upload
-        )
+        main_tweet_response = safe_tweet_with_retry(client, tweet_text)
         
         if not main_tweet_response:
-            logging.error("❌ CRITICAL ERROR: Failed to send main tweet!")
+            logging.error("❌ CRITICAL ERROR: Failed to send MONTY tweet!")
             return
             
         main_tweet_id = main_tweet_response.data['id']
-        logging.info(f"✅ Main tweet sent successfully! ID: {main_tweet_id}")
-        logging.info("🎉 SUCCESS: Tweet sent successfully!")
+        logging.info(f"✅ MONTY tweet sent successfully! ID: {main_tweet_id}")
+        logging.info("🎉 SUCCESS: MONTY AI tweet posted!")
         logging.info(f"   🔗 Tweet: https://x.com/user/status/{main_tweet_id}")
 
     except Exception as e:
-        logging.error(f"Unexpected error during process: {e}")
+        logging.error(f"Unexpected error during MONTY tweet process: {e}")
         import traceback
         logging.error(f"Full traceback: {traceback.format_exc()}")
 
