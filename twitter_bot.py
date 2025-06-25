@@ -34,7 +34,10 @@ except ImportError:
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler()]
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('logs.log', mode='a', encoding='utf-8')
+    ]
 )
 
 # API keys
@@ -264,6 +267,7 @@ def main():
             main_tweet_id = main_tweet_response.data['id']
             tweet_url = f"https://x.com/{me.data.username}/status/{main_tweet_id}"
             
+            # Log to console (GitHub Actions)
             logging.info("=" * 60)
             logging.info("🎉 TWEET SUCCESSFULLY POSTED TO X.COM!")
             logging.info("=" * 60)
@@ -272,6 +276,23 @@ def main():
             logging.info(f"📝 Content: {tweet_text.replace(chr(10), ' ')}")
             logging.info(f"📊 Length: {len(tweet_text)} characters")
             logging.info("=" * 60)
+            
+            # Additional detailed log to logs.log file
+            try:
+                with open('logs.log', 'a', encoding='utf-8') as log_file:
+                    timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
+                    log_file.write(f"\n{'='*80}\n")
+                    log_file.write(f"TWEET POSTED: {timestamp}\n")
+                    log_file.write(f"{'='*80}\n")
+                    log_file.write(f"Tweet ID: {main_tweet_id}\n")
+                    log_file.write(f"Tweet URL: {tweet_url}\n")
+                    log_file.write(f"Content Length: {len(tweet_text)} characters\n")
+                    log_file.write(f"Content:\n{tweet_text}\n")
+                    log_file.write(f"{'='*80}\n\n")
+                    
+                logging.info("📁 Tweet details saved to logs.log file")
+            except Exception as e:
+                logging.warning(f"Failed to write to logs.log: {e}")
         else:
             logging.error("❌ CRITICAL ERROR: Failed to send MONTY tweet after retries!")
 
