@@ -90,8 +90,8 @@ def safe_tweet_with_retry(client, text, media_ids=None, in_reply_to_tweet_id=Non
     
     return None
 
-def get_top_tokens():
-    """Fetch data from outlight.fun API"""
+def get_best_token():
+    """Fetch data from outlight.fun API and return the best called token"""
     try:
         response = requests.get(OUTLIGHT_API_URL)
         response.raise_for_status()
@@ -107,33 +107,27 @@ def get_top_tokens():
                 token_copy['filtered_calls'] = count_calls
                 tokens_with_filtered_calls.append(token_copy)
 
-        sorted_tokens = sorted(tokens_with_filtered_calls, key=lambda x: x.get('filtered_calls', 0), reverse=True)
-        top_3 = sorted_tokens[:3]
-        return top_3
+        if not tokens_with_filtered_calls:
+            return None
+
+        # Return only the best token (highest filtered_calls)
+        best_token = max(tokens_with_filtered_calls, key=lambda x: x.get('filtered_calls', 0))
+        return best_token
     except Exception as e:
         logging.error(f"Error fetching data from API: {e}")
         return None
 
-# ZMIANA: Całkowicie usunęliśmy funkcję format_tweet, bo nie ma już tweeta zapasowego.
-
-def generate_ai_tweet(top_3_tokens):
-    """Generate intelligent tweet using OpenAI based on token data"""
-    # ZMIANA: Jeśli AI nie jest dostępne, kończymy, a nie używamy zapasowej opcji.
+def generate_ai_tweet(best_token):
+    """Generate intelligent tweet using OpenAI based on the best token data"""
     if not openai_client:
         logging.error("OpenAI client not available. Cannot generate tweet.")
         return None
         
     try:
-        token_data = []
-        for i, token in enumerate(top_3_tokens, 1):
-            calls = token.get('filtered_calls', 0)
-            symbol = token.get('symbol', 'Unknown')
-            address = token.get('address', 'No Address')
-            short_address = f"{address[:4]}...{address[-4]}" if len(address) > 8 else address
-            token_data.append(f"{i}. ${symbol} - {calls} calls - CA: {short_address}")
-        
-        data_summary = "\n".join(token_data)
-        total_calls = sum(token.get('filtered_calls', 0) for token in top_3_tokens)
+        calls = best_token.get('filtered_calls', 0)
+        symbol = best_token.get('symbol', 'Unknown')
+        address = best_token.get('address', 'No Address')
+        # Use full address instead of shortened
         
         system_prompt = """You are MONTY, an AI agent with a distinctive style for crypto content, responding in English.
 
@@ -154,24 +148,24 @@ LANGUAGE & LIMITS:
 - Keep within X character limits.
 - Make each post unique and engaging."""
         
-        prompt = f"""Create a crypto Twitter post about the most called tokens in the last hour as MONTY.
+        prompt = f"""Create a crypto Twitter post about THE BEST CALLED TOKEN in the last hour as MONTY.
 
-DATA:
-{data_summary}
-
-Total calls tracked: {total_calls}
+TOKEN DATA:
+${symbol} - {calls} calls - CA: {address}
 
 Create 1 engaging post:
-- Start with a strong hook.
-- **Include the token data (Symbol and CA) naturally.**
+- Start with a strong hook about this being the TOP token of the hour.
+- **Include the token symbol (${symbol}) and FULL CONTRACT ADDRESS with "CA:" prefix (CA: {address}) naturally.**
 - Use MONTY's witty, brief style.
 - Max 270 chars preferred.
 - Include relevant emojis.
-- Focus on Solana/meme insights.
+- Focus on this token being the most called/popular in the last hour.
+- Add your AI commentary about why this token is trending.
+- ALWAYS include "CA:" before the contract address.
 
 Just return the tweet text, no labels."""
 
-        logging.info("Generating AI tweets...")
+        logging.info("Generating AI tweet for best token...")
         
         if openai_client == "legacy":
             import openai
@@ -186,7 +180,6 @@ Just return the tweet text, no labels."""
         main_tweet = ai_response.strip()
         
         if not main_tweet:
-            # ZMIANA: Jeśli AI zwróci pustą odpowiedź, logujemy błąd i zwracamy None
             logging.error("AI returned an empty response.")
             return None
 
@@ -202,14 +195,12 @@ Just return the tweet text, no labels."""
         
         main_tweet += link_to_add
         
-        # Logowanie sukcesu
         logging.info(f"✅ AI tweet generated successfully!")
         logging.info(f"   - Tweet: {len(main_tweet)} chars")
         
         return main_tweet
         
     except Exception as e:
-        # ZMIANA: W razie błędu logujemy go i zwracamy None, zamiast używać tweeta zapasowego.
         logging.error(f"Error during AI tweet generation: {e}")
         import traceback
         logging.error(f"Full traceback: {traceback.format_exc()}")
@@ -237,21 +228,19 @@ def main():
         logging.error(f"Error setting up Twitter client: {e}")
         return
 
-    top_3 = get_top_tokens()
-    if not top_3:
+    best_token = get_best_token()
+    if not best_token:
         logging.warning("No token data available. Skipping tweet for this run.")
         return
 
-    logging.info("=== GENERATING MONTY AI TWEET ===")
-    tweet_text = generate_ai_tweet(top_3)
+    logging.info("=== GENERATING MONTY AI TWEET FOR BEST TOKEN ===")
+    tweet_text = generate_ai_tweet(best_token)
     
-    # ZMIANA: Kluczowy warunek. Jeśli tweet_text jest None (bo AI zawiodło), przerywamy.
     if not tweet_text:
         logging.error("Tweet generation failed. Nothing to send for this run.")
         logging.info("GitHub Action: Bot execution finished due to AI failure.")
         return
 
-    # Ten kod wykona się tylko jeśli AI zadziałało i tweet_text jest poprawny.
     logging.info(f"📝 MONTY tweet prepared for sending:")
     logging.info(f"   Tweet: {len(tweet_text)} chars")
     logging.info(f"   Content: {tweet_text.replace(chr(10), ' ')}")
@@ -262,7 +251,6 @@ def main():
         
         if main_tweet_response:
             main_tweet_id = main_tweet_response.data['id']
-            # Logowanie sukcesu wysłania
             logging.info(f"🎉 SUCCESS: MONTY AI tweet posted!")
             logging.info(f"   🔗 Tweet URL: https://x.com/{me.data.username}/status/{main_tweet_id}")
         else:
