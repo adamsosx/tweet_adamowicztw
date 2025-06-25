@@ -153,17 +153,24 @@ LANGUAGE & LIMITS:
 TOKEN DATA:
 ${symbol} - {calls} calls - CA: {address}
 
+CRITICAL FORMATTING RULES:
+- Use "CA:" exactly like this: "CA: {address}" 
+- NEVER use "#CA:" - this is WRONG
+- NEVER add hashtag before CA
+- The format must be: CA: followed by address
+
 Create 1 engaging post:
 - Start with a strong hook about this being the TOP token of the hour.
-- **Include the token symbol (${symbol}) and FULL CONTRACT ADDRESS with "CA:" prefix (CA: {address}) naturally.**
+- Include the token symbol (${symbol}) and contract address using ONLY "CA: {address}" format.
 - Use MONTY's witty, brief style.
 - Max 200 chars for your content (remember full CA address + link will be added).
 - Include relevant emojis but keep it SHORT.
 - Focus on this token being the most called/popular in the last hour.
 - Add brief AI commentary about why this token is trending.
-- ALWAYS use "CA:" (NOT #CA:) before the contract address.
-- Do NOT use hashtags for CA.
 - Keep it VERY concise due to full CA address length.
+
+EXAMPLE FORMAT: "CA: 4c7GJc2wrJtvJV64Q7c7QAT7zy456xFsFucovgB1pump"
+NOT: "#CA: 4c7GJc2wrJtvJV64Q7c7QAT7zy456xFsFucovgB1pump"
 
 Just return the tweet text, no labels."""
 
@@ -255,8 +262,16 @@ def main():
         
         if main_tweet_response:
             main_tweet_id = main_tweet_response.data['id']
-            logging.info(f"🎉 SUCCESS: MONTY AI tweet posted!")
-            logging.info(f"   🔗 Tweet URL: https://x.com/{me.data.username}/status/{main_tweet_id}")
+            tweet_url = f"https://x.com/{me.data.username}/status/{main_tweet_id}"
+            
+            logging.info("=" * 60)
+            logging.info("🎉 TWEET SUCCESSFULLY POSTED TO X.COM!")
+            logging.info("=" * 60)
+            logging.info(f"✅ Tweet ID: {main_tweet_id}")
+            logging.info(f"🔗 Tweet URL: {tweet_url}")
+            logging.info(f"📝 Content: {tweet_text.replace(chr(10), ' ')}")
+            logging.info(f"📊 Length: {len(tweet_text)} characters")
+            logging.info("=" * 60)
         else:
             logging.error("❌ CRITICAL ERROR: Failed to send MONTY tweet after retries!")
 
