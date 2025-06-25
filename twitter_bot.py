@@ -157,12 +157,13 @@ Create 1 engaging post:
 - Start with a strong hook about this being the TOP token of the hour.
 - **Include the token symbol (${symbol}) and FULL CONTRACT ADDRESS with "CA:" prefix (CA: {address}) naturally.**
 - Use MONTY's witty, brief style.
-- Max 270 chars preferred.
-- Include relevant emojis.
+- Max 200 chars for your content (remember full CA address + link will be added).
+- Include relevant emojis but keep it SHORT.
 - Focus on this token being the most called/popular in the last hour.
-- Add your AI commentary about why this token is trending.
+- Add brief AI commentary about why this token is trending.
 - ALWAYS use "CA:" (NOT #CA:) before the contract address.
 - Do NOT use hashtags for CA.
+- Keep it VERY concise due to full CA address length.
 
 Just return the tweet text, no labels."""
 
@@ -188,7 +189,9 @@ Just return the tweet text, no labels."""
         if main_tweet.startswith("Tweet:"): main_tweet = main_tweet.replace("Tweet:", "").strip()
         
         link_to_add = "\n\n🔗 outlight.fun"
-        max_text_length = 280 - len(link_to_add)
+        # Reserve space for full CA address (~44 chars) + "CA: " (4 chars) + link (~18 chars)
+        # Total reserved: ~66 chars, so max content should be ~214 chars
+        max_text_length = 214
 
         if len(main_tweet) > max_text_length:
             main_tweet = main_tweet[:max_text_length - 3] + "..."
