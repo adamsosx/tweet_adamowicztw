@@ -36,7 +36,7 @@ logging.basicConfig(
     handlers=[logging.StreamHandler()]
 )
 
-# API keys
+# API keys - Pamiętaj, aby ustawić je jako sekrety w GitHub Actions
 api_key = os.getenv("TWITTER_API_KEY")
 api_secret = os.getenv("TWITTER_API_SECRET")
 access_token = os.getenv("TWITTER_ACCESS_TOKEN")
@@ -66,7 +66,7 @@ def safe_tweet_with_retry(client, text, media_ids=None, in_reply_to_tweet_id=Non
             logging.warning(f"Rate limit exceeded. Attempt {attempt + 1}/{max_retries}")
             logging.warning(f"Waiting {wait_time} seconds before retry")
             
-            if attempt < max_retries - 1:  # Don't wait on last attempt
+            if attempt < max_retries - 1:
                 time.sleep(wait_time)
             else:
                 logging.error("Maximum retry attempts exceeded. Tweet not sent.")
@@ -84,7 +84,7 @@ def safe_tweet_with_retry(client, text, media_ids=None, in_reply_to_tweet_id=Non
             logging.error(f"Unexpected error on attempt {attempt + 1}: {e}")
             if attempt == max_retries - 1:
                 raise e
-            time.sleep(30)  # Short pause before retry
+            time.sleep(30)
     
     return None
 
@@ -127,7 +127,8 @@ def safe_media_upload(api_v1, image_path, max_retries=3):
 def get_top_tokens():
     """Fetch data from outlight.fun API"""
     try:
-        response = requests.get(OUTLIGHT_API_URL, verify=False)
+        # ZMIANA: Usunięto 'verify=False' dla bezpieczniejszego połączenia
+        response = requests.get(OUTLIGHT_API_URL)
         response.raise_for_status()
         data = response.json()
 
@@ -170,18 +171,16 @@ def generate_ai_tweet(top_3_tokens):
         return format_tweet(top_3_tokens)
         
     try:
-        # Prepare data for AI
         token_data = []
         for i, token in enumerate(top_3_tokens, 1):
             calls = token.get('filtered_calls', 0)
             symbol = token.get('symbol', 'Unknown')
-            address = token.get('address', 'No Address')[:8] + "..."  # Shorten address
+            address = token.get('address', 'No Address')[:8] + "..."
             token_data.append(f"{i}. ${symbol} - {calls} calls - {address}")
         
         data_summary = "\n".join(token_data)
         total_calls = sum(token.get('filtered_calls', 0) for token in top_3_tokens)
         
-        # Create prompt for OpenAI
         system_prompt = """You are MONTY, an AI agent with a distinctive style for crypto content, responding in English.
 
 PERSONALITY & STYLE:
@@ -226,9 +225,7 @@ Just return the tweet text, no labels."""
 
         logging.info("Generating AI tweets...")
         
-        # Handle different OpenAI versions
         if openai_client == "legacy":
-            # Old OpenAI v0.x
             import openai
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
@@ -241,7 +238,6 @@ Just return the tweet text, no labels."""
             )
             ai_response = response.choices[0].message.content.strip()
         else:
-            # New OpenAI v1.x
             response = openai_client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
@@ -255,16 +251,13 @@ Just return the tweet text, no labels."""
         
         logging.info(f"AI Response received: {len(ai_response)} characters")
         
-        # Clean up the response (remove any formatting artifacts)
         main_tweet = ai_response.strip()
         
-        # Remove any potential labels that might slip through
         if main_tweet.startswith("MAIN_TWEET:"):
             main_tweet = main_tweet.replace("MAIN_TWEET:", "").strip()
         if main_tweet.startswith("Tweet:"):
             main_tweet = main_tweet.replace("Tweet:", "").strip()
         
-        # Validate length
         if len(main_tweet) > 280:
             main_tweet = main_tweet[:277] + "..."
             logging.warning(f"Main tweet truncated to {len(main_tweet)} characters")
@@ -281,29 +274,24 @@ Just return the tweet text, no labels."""
     except Exception as e:
         logging.error(f"Error generating AI tweets: {e}")
         logging.warning("Falling back to template tweets...")
-        
-        # Fallback to original format if AI fails
         return format_tweet(top_3_tokens)
 
 def main():
     logging.info("GitHub Action: Bot execution started.")
 
-    # Check Twitter API keys first
     if not all([api_key, api_secret, access_token, access_token_secret]):
         logging.error("Missing required Twitter API keys. Terminating.")
         return
     
-    # Check OpenAI client - STOP if not available
     if not openai_client:
         logging.error("❌ CRITICAL: OpenAI API key not found. Bot requires AI to function.")
         logging.error("Add OPENAI_API_KEY to GitHub Secrets to enable MONTY AI tweets.")
         logging.info("GitHub Action: Bot execution finished - No OpenAI key found.")
-        return  # EXIT HERE - no tweets without AI
+        return
 
     logging.info("✅ OpenAI client initialized - MONTY AI ready!")
 
     try:
-        # Twitter API clients
         client = tweepy.Client(
             consumer_key=api_key,
             consumer_secret=api_secret,
@@ -320,17 +308,14 @@ def main():
         logging.error(f"Error setting up Twitter clients: {e}")
         return
 
-    # Fetch data
     top_3 = get_top_tokens()
     if not top_3:
         logging.warning("No token data available. Skipping tweet.")
         return
 
-    # Generate MONTY AI tweet ONLY
     logging.info("=== GENERATING MONTY AI TWEET ===")
     tweet_text = generate_ai_tweet(top_3)
     
-    # Validate length BEFORE sending
     if len(tweet_text) > 280:
         logging.error(f"MONTY tweet too long ({len(tweet_text)} characters). CANCELING.")
         return
@@ -340,7 +325,6 @@ def main():
     logging.info(f"   Content: {tweet_text}")
 
     try:
-        # Send MONTY tweet
         logging.info("=== SENDING MONTY TWEET ===")
         
         main_tweet_response = safe_tweet_with_retry(client, tweet_text)
@@ -351,7 +335,7 @@ def main():
             
         main_tweet_id = main_tweet_response.data['id']
         logging.info(f"✅ MONTY tweet sent successfully! ID: {main_tweet_id}")
-        logging.info("🎉 SUCCESS: MONTY AI tweet posted!")
+        logging.info(f"🎉 SUCCESS: MONTY AI tweet posted!")
         logging.info(f"   🔗 Tweet: https://x.com/user/status/{main_tweet_id}")
 
     except Exception as e:
@@ -361,12 +345,6 @@ def main():
 
     logging.info("GitHub Action: Bot execution finished.")
 
+# ZMIANA: Usunięto cały blok, który wyłączał ostrzeżenia SSL i wyświetlał o tym logi.
 if __name__ == "__main__":
-    # Disable SSL warnings if verify=False is used in requests
-    try:
-        requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
-        logging.warning("SSL verification disabled for requests")
-    except AttributeError:
-        pass
-    
     main()
