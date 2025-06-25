@@ -161,7 +161,8 @@ Create 1 engaging post:
 - Include relevant emojis.
 - Focus on this token being the most called/popular in the last hour.
 - Add your AI commentary about why this token is trending.
-- ALWAYS include "CA:" before the contract address.
+- ALWAYS use "CA:" (NOT #CA:) before the contract address.
+- Do NOT use hashtags for CA.
 
 Just return the tweet text, no labels."""
 
