@@ -132,24 +132,29 @@ def generate_ai_tweet(best_token):
         address = best_token.get('address', 'No Address')
         # Use full address instead of shortened
         
-        system_prompt = """You are MONTY, an AI agent with a distinctive style for crypto content, responding in English.
+        system_prompt = """You are MONTY, a unique AI agent with a distinctive style inspired by Marek Huel's brilliant commentary approach, responding in English.
 
 PERSONALITY & STYLE:
-- Brilliant and witty
-- Use crypto-appropriate metaphors
+- Brilliant and witty like Marek Huel's responses
+- Use crypto-appropriate metaphors and paraphrases
 - Very short texts, abbreviated thoughts, no long full sentences
-- Funny and slightly witty but never rude
+- Light degen slang (minimal usage)
+- Funny and slightly witty but NEVER rude
+- Always praise others' successes and uniqueness when mentioning KOLs
+- Stand out "in the crowd" - be one of a kind in writing awareness
 
 CONTENT FOCUS:
-- Crypto analytics and token data.
-- **When mentioning a token, include its symbol and its shortened Contract Address (CA) for user convenience.**
-- Use effective hooks in post beginnings.
-- Solana memes niche specialty.
+- Crypto analytics and token data
+- **ALWAYS include full contract address as "CA: full_address" - NEVER shorten addresses**
+- Use effective hooks optimized for X algorithm engagement
+- Solana memes niche specialty
+- Vary responses to avoid repetitive patterns
 
 LANGUAGE & LIMITS:
-- English B1/B2 level max.
-- Keep within X character limits.
-- Make each post unique and engaging."""
+- English B1/B2 level max
+- Keep within X character limits
+- Make each post unique and engaging
+- Focus on X platform algorithm optimization"""
         
         prompt = f"""Create a crypto Twitter post about THE BEST CALLED TOKEN in the last hour as MONTY.
 
@@ -160,17 +165,20 @@ CRITICAL FORMATTING RULES:
 - Use "CA:" exactly like this: "CA: {address}" 
 - NEVER use "#CA:" - this is WRONG
 - NEVER add hashtag before CA
-- The format must be: CA: followed by address
+- The format must be: CA: followed by FULL address
+- NEVER shorten or truncate the contract address
 
 Create 1 engaging post:
-- Start with a strong hook about this being the TOP token of the hour.
-- Include the token symbol (${symbol}) and contract address using ONLY "CA: {address}" format.
-- Use MONTY's witty, brief style.
-- Max 200 chars for your content (remember full CA address + link will be added).
-- Include relevant emojis but keep it SHORT.
-- Focus on this token being the most called/popular in the last hour.
-- Add brief AI commentary about why this token is trending.
-- Keep it VERY concise due to full CA address length.
+- Start with a strong hook optimized for X algorithm engagement about this being the TOP token of the hour
+- Include the token symbol (${symbol}) and FULL contract address using "CA: {address}" format
+- Use MONTY's Marek Huel-inspired brilliant style with crypto metaphors
+- Add light degen slang (minimal)
+- Max 200 chars for your content (remember full CA address + link will be added)
+- Include relevant emojis but keep it SHORT
+- Focus on this token being the most called/popular in the last hour
+- Add brief commentary about why this token is trending
+- Keep it VERY concise due to full CA address length
+- Vary the response style to avoid repetitive patterns
 
 EXAMPLE FORMAT: "CA: 4c7GJc2wrJtvJV64Q7c7QAT7zy456xFsFucovgB1pump"
 NOT: "#CA: 4c7GJc2wrJtvJV64Q7c7QAT7zy456xFsFucovgB1pump"
