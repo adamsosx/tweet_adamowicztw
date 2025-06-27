@@ -1,11 +1,21 @@
+
+### Wyjaśnienie zmiany
+*   `*/2` w polu godziny oznacza "co drugą godzinę".
+*   `*` w polu godziny oznacza "co każdą godzinę".
+
+### Kompletny, zaktualizowany plik
+
+Skopiuj poniższą treść i podmień ją w swoim pliku konfiguracyjnym GitHub Actions.
+
+```yaml
 name: Monty Twitter Bot
 
 on:
-  # 1. Uruchamiaj automatycznie co dwie godziny
+  # 1. Uruchamiaj automatycznie co godzinę
   schedule:
     # Składnia cron: minuta godzina dzień-miesiąca miesiąc dzień-tygodnia
-    # '0 */2 * * *' oznacza "o minucie 0, co drugą godzinę, każdego dnia".
-    - cron: '0 */2 * * *'
+    # '0 * * * *' oznacza "o minucie 0, co każdą godzinę, każdego dnia".
+    - cron: '0 * * * *'
 
   # 2. Pozwól na ręczne uruchomienie z panelu Actions na GitHubie
   workflow_dispatch:
