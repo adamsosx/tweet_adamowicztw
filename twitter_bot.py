@@ -66,7 +66,7 @@ def format_main_tweet(top_2_tokens):
         tweet += f"📞 {calls}\n\n"
     tweet = tweet.rstrip('\n') + '\n'
     tweet += "📊 Get real-time sniper signals from top KOLs 🚀 outlight.fun\n"
-    tweet += "#SOL #Outlight #TokenCalls"
+    tweet += "#SOL #Outlight"
     return tweet
 
 
