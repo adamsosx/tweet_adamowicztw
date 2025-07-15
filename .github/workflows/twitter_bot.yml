@@ -2,8 +2,10 @@ name: Twitter Bot
 
 on:
   schedule:
-    # Uruchamiaj co godzinę, zawsze o pełnej godzinie.
-    - cron: '0 * * * *'
+    # Uruchamiaj co 1.5 godziny (co 90 minut)
+    # Format: minute hour day month day-of-week
+    # 0,30 oznacza: o 00:00, 01:30, 03:00, 04:30, 06:00, 07:30, 09:00, 10:30, 12:00, 13:30, 15:00, 16:30, 18:00, 19:30, 21:00, 22:30
+    - cron: '0,30 * * * *'
   workflow_dispatch:  # Możliwość ręcznego uruchomienia
 
 jobs:
